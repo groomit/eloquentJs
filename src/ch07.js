@@ -146,8 +146,45 @@ function routeRobot(state, memory) {
 
 //####################################
 //third robot prototype - does some "simple" pathfinding on the graph object
+//Some rules:
+//1. Only routes that start at "from" are valid
+//2. No place should be visited twice
+//3. Short routes should be preferred
 
+function findRoute(graph, from, to){
+//create a work array whith an {at, route} object
+  let work = [{at:from, route:[]}];
+  //work through the work-list
+  for(let i=0; i< work.length; i++){
+    //define variables for current at and route
+    let {at, route} =  work[i];
+    //for every place in the graph, check if "to" is included
+    for(let place of graph[at]){
+      //if to is within the current graph object, return the route to there.
+      //concat in this context appends the array whith place, without pushing it (at least I think so)
+      if(place === to) return route.concat(place);
+      //if we have not been at "place", we add a new work entry
+      if(!work.some(w => w.at === place)) work.push({at:place, route: route.concat(place)});
+    }
+  }
+}
 
+// the Robot takes a state-object as first parameter and the current route as memory parameter
+function goalOrientedRobot({place, parcels}, route){
+//doing one by one parcels
+  if(route.length === 0){
+    //just concentrate on the first parcel
+    let parcel = parcels[0];
+    if(parcel.place != place){
+    //if we do not yet have the parcel (not in the same location), we look up a route to fetch it
+      route = findRoute(roadGraph, place, parcel.place);
+    }else{
+    //otherwise find a route to the parcel direction
+      route =  findRoute(roadGraph,place, parcel.address);
+    }
+  }
+  return {direction: route[0], memory:route.slice(1)};
+}
 
 
 //robot-loop - takes an initial state, a robot function and a memory object
@@ -169,4 +206,4 @@ function runRobot(state, robot, memory) {
   }
 }
 
-runRobot(VillageState.random(), routeRobot, []);
+runRobot(VillageState.random(), goalOrientedRobot, []);
