@@ -40,7 +40,7 @@ function makeGraph(arr) {
 }
 
 const roadGraph = makeGraph(roads);
-//console.log(roadGraph);
+console.log(roadGraph);
 
 //instead of creating multible objects to simulate the town, parcels and robots, the author suggested to keep it
 // as a simple function and calculate a new state for each move.
@@ -104,15 +104,56 @@ let evenNewerState = newState.move("Bob's House");
 console.log(evenNewerState.parcels);
 */
 
+
+//#####################################
 //first robobt prototype - random delivery
 function randomRobot(state) {
   return { direction: randomPick(roadGraph[state.place]) };
 }
 
+
+//#####################################
+//second robot prototype - run on a straight delivery road - the robot would have to make this route twice as a maximum number of turns
+
+//define a fixed route for the robot
+const mailRoute = [
+  "Alice's House",
+  "Cabin",
+  "Alice's House",
+  "Bob's House",
+  "Town Hall",
+  "Daria's House",
+  "Ernie's House",
+  "Grete's House",
+  "Shop",
+  "Grete's House",
+  "Farm",
+  "Marketplace",
+  "Post Office"
+];
+
+//The actual robot intelligence. It takes a state and some memory
+function routeRobot(state, memory) {
+//if the memory is empty, the route will be loaded into it
+  if (memory.length === 0) {
+    memory = mailRoute;
+  }
+//the robot returns an action object, with the first memory location as direction and the remaining memory minus the first entry.
+// This way the memory will run empty, so that above if-statement is triggered
+  return { direction: memory[0], memory: memory.slice(1) };
+}
+
+
+//####################################
+//third robot prototype - does some "simple" pathfinding on the graph object
+
+
+
+
 //robot-loop - takes an initial state, a robot function and a memory object
 function runRobot(state, robot, memory) {
   let turn = 0;
-  //console.log(state.parcels);
+  console.log(state.parcels);
 
   for (turn; ; turn++) {
     if (state.parcels.length === 0) {
@@ -120,7 +161,7 @@ function runRobot(state, robot, memory) {
       break;
     }
 
-    let action = robot(state);
+    let action = robot(state, memory);
     state = state.move(action.direction);
     memory = action.memory;
 
@@ -128,4 +169,4 @@ function runRobot(state, robot, memory) {
   }
 }
 
-runRobot(VillageState.random(), randomRobot);
+runRobot(VillageState.random(), routeRobot, []);
