@@ -104,13 +104,11 @@ let evenNewerState = newState.move("Bob's House");
 console.log(evenNewerState.parcels);
 */
 
-
 //#####################################
 //first robobt prototype - random delivery
 function randomRobot(state) {
   return { direction: randomPick(roadGraph[state.place]) };
 }
-
 
 //#####################################
 //second robot prototype - run on a straight delivery road - the robot would have to make this route twice as a maximum number of turns
@@ -134,15 +132,14 @@ const mailRoute = [
 
 //The actual robot intelligence. It takes a state and some memory
 function routeRobot(state, memory) {
-//if the memory is empty, the route will be loaded into it
+  //if the memory is empty, the route will be loaded into it
   if (memory.length === 0) {
     memory = mailRoute;
   }
-//the robot returns an action object, with the first memory location as direction and the remaining memory minus the first entry.
-// This way the memory will run empty, so that above if-statement is triggered
+  //the robot returns an action object, with the first memory location as direction and the remaining memory minus the first entry.
+  // This way the memory will run empty, so that above if-statement is triggered
   return { direction: memory[0], memory: memory.slice(1) };
 }
-
 
 //####################################
 //third robot prototype - does some "simple" pathfinding on the graph object
@@ -151,41 +148,69 @@ function routeRobot(state, memory) {
 //2. No place should be visited twice
 //3. Short routes should be preferred
 
-function findRoute(graph, from, to){
-//create a work array whith an {at, route} object
-  let work = [{at:from, route:[]}];
+function findRoute(graph, from, to) {
+  //create a work array whith an {at, route} object
+  let work = [{ at: from, route: [] }];
   //work through the work-list
-  for(let i=0; i< work.length; i++){
+  for (let i = 0; i < work.length; i++) {
     //define variables for current at and route
-    let {at, route} =  work[i];
+    let { at, route } = work[i];
     //for every place in the graph, check if "to" is included
-    for(let place of graph[at]){
+    for (let place of graph[at]) {
       //if to is within the current graph object, return the route to there.
       //concat in this context appends the array whith place, without pushing it (at least I think so)
-      if(place === to) return route.concat(place);
+      if (place === to) return route.concat(place);
       //if we have not been at "place", we add a new work entry
-      if(!work.some(w => w.at === place)) work.push({at:place, route: route.concat(place)});
+      if (!work.some(w => w.at === place))
+        work.push({ at: place, route: route.concat(place) });
     }
   }
 }
+
+/*
+findRoute-Example Alice's House -> Shop
+
+
+//ASCII Map - from Townhall theres a connection to S AND T. 
+From G there is a connection to S only and to E.
+This is what the parenthesis mean
+
+ F =(M)= P = A = C
+ |   |       |
+[G=(S]=T) == B
+ |     |
+ E === D
+
+[
+0:	{at: "Alice's House", route: []}
+1:	{at:	"Bob's House", route:	["Bob's House"]}
+2:	{at: "Cabin", route: ["Cabin"]}
+3:	{at:	"Post Office", route:	["Post Office"]}
+4:	{at:	"Town Hall", route:	["Bob's House", "Town Hall"]}
+5:	{at:	"Marketplace", route:	["Post Office", "Marketplace"]}
+6:	{at:	"Daria's House", route:	[0:	"Bob's House", 1:	"Town Hall", 2:	"Daria's House"]}
+] 
+ 
+Chosen Route:
+ ["Bob's House", "Town Hall", "Shop"]
+*/
 
 // the Robot takes a state-object as first parameter and the current route as memory parameter
-function goalOrientedRobot({place, parcels}, route){
-//doing one by one parcels
-  if(route.length === 0){
+function goalOrientedRobot({ place, parcels }, route) {
+  //doing one by one parcels
+  if (route.length === 0) {
     //just concentrate on the first parcel
     let parcel = parcels[0];
-    if(parcel.place != place){
-    //if we do not yet have the parcel (not in the same location), we look up a route to fetch it
+    if (parcel.place != place) {
+      //if we do not yet have the parcel (not in the same location), we look up a route to fetch it
       route = findRoute(roadGraph, place, parcel.place);
-    }else{
-    //otherwise find a route to the parcel direction
-      route =  findRoute(roadGraph,place, parcel.address);
+    } else {
+      //otherwise find a route to the parcel direction
+      route = findRoute(roadGraph, place, parcel.address);
     }
   }
-  return {direction: route[0], memory:route.slice(1)};
+  return { direction: route[0], memory: route.slice(1) };
 }
-
 
 //robot-loop - takes an initial state, a robot function and a memory object
 function runRobot(state, robot, memory) {
