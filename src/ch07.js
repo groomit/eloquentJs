@@ -158,7 +158,7 @@ function findRoute(graph, from, to) {
     //for every place in the graph, check if "to" is included
     for (let place of graph[at]) {
       //if to is within the current graph object, return the route to there.
-      //concat in this context appends the array whith place, without pushing it (at least I think so)
+      //concat returns a new appended array. Whereas push would change the array in place.
       if (place === to) return route.concat(place);
       //if we have not been at "place", we add a new work entry
       if (!work.some(w => w.at === place))
@@ -201,7 +201,7 @@ function goalOrientedRobot({ place, parcels }, route) {
   if (route.length === 0) {
     //just concentrate on the first parcel
     let parcel = parcels[0];
-    if (parcel.place != place) {
+    if (parcel.place !== place) {
       //if we do not yet have the parcel (not in the same location), we look up a route to fetch it
       route = findRoute(roadGraph, place, parcel.place);
     } else {
