@@ -1,5 +1,6 @@
 import "./styles.css";
 
+//raw graph data
 const roads = [
   "Alice's House-Bob's House",
   "Alice's House-Cabin",
@@ -17,6 +18,7 @@ const roads = [
   "Shop-Town Hall"
 ];
 
+//generate a structured object by adding properties and values to obj
 function addNode(obj, from, to) {
   if (obj[from] == null) {
     obj[from] = [to];
@@ -25,6 +27,7 @@ function addNode(obj, from, to) {
   }
 }
 
+//the actual graph creation - make graph for both combinations from -> to and to -> from
 function makeGraph(arr) {
   let ret = Object.create(null);
 
@@ -37,8 +40,12 @@ function makeGraph(arr) {
 }
 
 const roadGraph = makeGraph(roads);
-console.log(roadGraph);
+//console.log(roadGraph);
 
+//instead of creating multible objects to simulate the town, parcels and robots, the author suggested to keep it
+// as a simple function and calculate a new state for each move.
+// a state holds a current position "place" and an array of parcels. The only methods it has is the move-function, where
+// the magic happens and the static random-function, which creates a state with a random set of parcels
 class VillageState {
   constructor(place, parcels) {
     this.place = place;
@@ -46,10 +53,10 @@ class VillageState {
   }
 
   move(destination) {
-    //wenn keine direkte Verbindung vom Standort zum Ziel, dann das aktuelle VillageState-Objekt zurückgeben, ...
+    //In case there is no direct connection from place to destination, return the current state, ...
     if (!roadGraph[this.place].includes(destination)) return this;
     else {
-      //... sonst Pakete am neuen Ziel abliefern und aufnehmen
+      //... otherwise deliver parcels and update their location
       let parcels = this.parcels
         .map(p => {
           if (p.place === this.place)
@@ -57,11 +64,12 @@ class VillageState {
           else return p;
         })
         .filter(p => p.address !== destination);
-      //... und ein neues Objekt erzeugen mit Standort = Ziel..
+      //... and create a new state with place = destination..
       return new VillageState(destination, parcels);
     }
   }
 
+  // called as VillageState.random(). Creates a set of random parcels with {place, address}
   static random(count = 5) {
     let parcels = [];
     for (let i = 0; i < count; i++) {
@@ -79,6 +87,7 @@ class VillageState {
   }
 }
 
+//Pick a random array item
 function randomPick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -95,13 +104,15 @@ let evenNewerState = newState.move("Bob's House");
 console.log(evenNewerState.parcels);
 */
 
+//first robobt prototype - random delivery
 function randomRobot(state) {
   return { direction: randomPick(roadGraph[state.place]) };
 }
 
+//robot-loop - takes an initial state, a robot function and a memory object
 function runRobot(state, robot, memory) {
   let turn = 0;
-  console.log(state.parcels);
+  //console.log(state.parcels);
 
   for (turn; ; turn++) {
     if (state.parcels.length === 0) {
